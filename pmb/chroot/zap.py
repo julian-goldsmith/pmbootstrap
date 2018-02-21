@@ -102,44 +102,30 @@ def zap_mismatch_bins(args, confirm=True, dry=False):
         return
 
     reindex = False
-    for apkindex_path in glob.glob(args.work + "/packages/*/APKINDEX.tar.gz"):
-        apkindex = pmb.parse.apkindex.parse(args, apkindex_path, False)
-        for pkgname, bin_data in apkindex.items():
-            # Only real packages have apks, provided packages do not exist
-            # (e.g. "so:libtest.so.1.2")
-            if pkgname != bin_data["pkgname"]:
-                continue
-            origin = bin_data["origin"]
-            version = bin_data["version"]
-            arch = bin_data["arch"]
+    for path in glob.glob(args.work + "/packages/*/*.apk"):
+        apk = pmb.parse.apk(args, path)
+        origin = apk["origin"]
+        version = apk["pkgver"]
 
-            # Apk path
-            apk_path_short = arch + "/" + pkgname + "-" + version + ".apk"
-            apk_path = args.work + "/packages/" + apk_path_short
-            if not os.path.exists(apk_path):
-                logging.info("WARNING: Package mentioned in index not"
-                             " found: " + apk_path_short)
-                continue
+        # Aport path
+        aport_path = pmb.build.other.find_aport(args, origin, False)
+        if not aport_path:
+            logging.info("% rm " + path + " (" + origin + " aport not found")
 
-            # Aport path
-            aport_path = pmb.build.other.find_aport(args, origin, False)
-            if not aport_path:
-                logging.info("% rm " + apk_path_short + " (" + origin +
-                             " aport not found)")
-                if not dry:
-                    pmb.helpers.run.root(args, ["rm", apk_path])
-                    reindex = True
-                continue
+            if not dry:
+                pmb.helpers.run.root(args, ["rm", path])
+                reindex = True
+            continue
 
-            # Clear out any binary apks that do not match what is in aports
-            apkbuild = pmb.parse.apkbuild(args, aport_path + "/APKBUILD")
-            version_aport = apkbuild["pkgver"] + "-r" + apkbuild["pkgrel"]
-            if version != version_aport:
-                logging.info("% rm " + apk_path_short + " (" + origin +
-                             " aport: " + version_aport + ")")
-                if not dry:
-                    pmb.helpers.run.root(args, ["rm", apk_path])
-                    reindex = True
+        # Clear out any binary apks that do not match what is in aports
+        apkbuild = pmb.parse.apkbuild(args, aport_path + "/APKBUILD")
+        version_aport = apkbuild["pkgver"] + "-r" + apkbuild["pkgrel"]
+        if version != version_aport:
+            logging.info("% rm " + path + " (" + origin + " aport: " +
+                         version_aport + ")")
+            if not dry:
+                pmb.helpers.run.root(args, ["rm", path])
+                reindex = True
 
     if reindex:
         pmb.build.other.index_repo(args)

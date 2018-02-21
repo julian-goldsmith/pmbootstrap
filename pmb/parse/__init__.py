@@ -22,4 +22,5 @@ from pmb.parse.binfmt_info import binfmt_info
 from pmb.parse.deviceinfo import deviceinfo
 from pmb.parse.kconfig import check
 from pmb.parse.bootimg import bootimg
+from pmb.parse.apk import apk
 import pmb.parse.arch

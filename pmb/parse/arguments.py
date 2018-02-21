@@ -331,6 +331,10 @@ def arguments():
     for action in [checksum, build, aportgen]:
         action.add_argument("packages", nargs="+")
 
+    # Action: apk_parse
+    apkindex_parse = sub.add_parser("apk_parse")
+    apkindex_parse.add_argument("apk_path", default=None, nargs="+")
+
     # Action: kconfig_check / apkbuild_parse
     kconfig_check = sub.add_parser("kconfig_check", help="check, whether all"
                                    " the necessary options are"

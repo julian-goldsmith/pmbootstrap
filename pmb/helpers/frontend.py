@@ -236,6 +236,13 @@ def kconfig_check(args):
         raise RuntimeError("kconfig_check failed!")
 
 
+def apk_parse(args):
+    # Iterate over all packages
+    for path in args.apk_path:
+        print(path + ":")
+        print(json.dumps(pmb.parse.apk(args, path), indent=4, sort_keys=True))
+
+
 def apkbuild_parse(args):
     # Default to all packages
     packages = args.packages
