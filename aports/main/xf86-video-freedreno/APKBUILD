@@ -1,0 +1,44 @@
+# FIXME: make sure all of this is correct
+pkgname=xf86-video-freedreno
+pkgver=1.4.0
+pkgrel=4
+pkgdesc="Freedreno xorg driver"
+url="https://github.com/postmarketOS"
+arch="all"
+license="MIT"
+depends="mesa-dri-freedreno xorg-server libdrm xproto"
+makedepends="xorg-server-dev xproto libdrm-dev mesa-dev eudev-dev"
+install=""
+subpackages="$pkgname-doc"
+#source="http://www.x.org/releases/individual/driver/$pkgname-$pkgver.tar.bz2"
+source="$pkgname-$pkgver.tar.bz2 50-freedreno.conf"
+options="!check !strip"
+
+builddir="$srcdir"/$pkgname-$pkgver
+build() {
+	cd "$builddir"
+	export CFLAGS="$CFLAGS -g"
+	export LDFLAGS="$LDFLAGS -Wl,-z,lazy -g"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--disable-selective-werror
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
+}
+
+package() {
+	install -Dm644 "$srcdir"/50-freedreno.conf \
+		"$pkgdir"/etc/X11/xorg.conf.d/50-freedreno.conf
+
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="c480bbb3e3b2adb8ab6e8e2dcf6405dd0a7d228b9d9c360c4bb027268b1364a51dea4f021eb94eafa95d7dc2db48803ee8ca7a2275458d32900dc5b4190b160f  xf86-video-freedreno-1.4.0.tar.bz2
+dee168642f5ab3e8fc31c667f1e20863498dfe38190fc591925a238ee526c31b764c49cc53a9e4dd7d1aa3e14b0b9b7370400844093a330cf35f4f21d12363f2  50-freedreno.conf"

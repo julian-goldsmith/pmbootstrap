@@ -1,0 +1,54 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=libdrm
+pkgver=2.4.90
+pkgrel=2
+pkgdesc="Userspace interface to kernel DRM services"
+url="https://dri.freedesktop.org/"
+arch="all"
+# Requires a computer with gfx, no X running, build user in 'video' group..
+options="!check !strip"
+license="MIT"
+depends=""
+depends_dev="linux-headers"
+makedepends="$depends_dev libpthread-stubs eudev-dev libpciaccess-dev xmlto"
+checkdepends="cunit-dev bash"
+subpackages="$pkgname-dev $pkgname-doc"
+#https://dri.freedesktop.org/$pkgname/$pkgname-$pkgver.tar.bz2
+#fix-symbol-checks.patch
+source="libdrm.tar.gz
+	ioctl.patch
+	"
+
+#builddir="$srcdir/$pkgname-$pkgver"
+builddir="$srcdir/drm"
+
+build() {
+	cd "$builddir"
+	export CFLAGS="$CFLAGS -g -w"
+	export LDFLAGS="$LDFLAGS -g"
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--enable-freedreno \
+		--enable-freedreno-kgsl \
+		--enable-udev \
+		--disable-valgrind
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
+}
+
+package() {
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="cd0247c193161d787eb52f675845606b663819876678b93aab2374278e2538e5267115acd420569ec6d17c3674b2984bc6450123cc3297ab684a919f8576119e  libdrm.tar.gz
+af52fef51aaa05a4dd17919371cb9d92a77480402730bf53ba223e54df52f3825be05a7f28e6aef8c904db5ee59fe38a6c15bc6aafa7f8d31a719e80399dd51f  ioctl.patch"
