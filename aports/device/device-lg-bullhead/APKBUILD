@@ -2,21 +2,28 @@
 pkgname="device-lg-bullhead"
 pkgdesc="Google Nexus 5X"
 pkgver=0.1
-pkgrel=1
+pkgrel=2
 url="https://postmarketos.org"
 license="MIT"
 arch="noarch"
 options="!check"
 depends="postmarketos-base linux-lg-bullhead mkbootimg mesa-dri-swrast libsparse msm-fb-refresher"
 makedepends="devicepkg-dev"
-source="deviceinfo"
+source="deviceinfo fb.modes directfbrc"
 
 build() {
 	devicepkg_build $startdir $pkgname
 }
 
 package() {
+	install -Dm644 "$srcdir/fb.modes" \
+		"$pkgdir/etc/fb.modes"
+	install -Dm644 "$srcdir/directfbrc" \
+		"$pkgdir/etc/directfbrc"
+
 	devicepkg_package $startdir $pkgname
 }
 
-sha512sums="8af915fed8fe29d279148077c3f71924fac31250990b886bfafc034d2c0905f116618ef3af4c4e993dffa4325273e5119efc388a3c17f1130b753c76ee2139b9  deviceinfo"
+sha512sums="8af915fed8fe29d279148077c3f71924fac31250990b886bfafc034d2c0905f116618ef3af4c4e993dffa4325273e5119efc388a3c17f1130b753c76ee2139b9  deviceinfo
+fd3a1a3efa696596585ba222b68420c3db6c52c1be8816ea8eeb206251365ab3340ed2d37493a53a37dd8ab2d9fb383d9f5b002345d4e8858eb3b49f3890a95f  fb.modes
+eea461b4c2e46351e606039b0fd489c5cf5fc3af71cd09a8aa3f327930ab9c8381908c8079e2cf1d1aba81e70d24b1aaf5e39b32a83596a32ce0c93de04202e9  directfbrc"
