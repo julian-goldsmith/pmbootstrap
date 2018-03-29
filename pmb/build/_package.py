@@ -19,7 +19,6 @@ along with pmbootstrap.  If not, see <http://www.gnu.org/licenses/>.
 import datetime
 import logging
 import os
-import shlex
 
 import pmb.build
 import pmb.build.autodetect
@@ -258,7 +257,7 @@ def override_source(args, apkbuild, pkgver, src, suffix="native"):
     append_path = "/tmp/APKBUILD.append"
     append_path_outside = args.work + "/chroot_" + suffix + append_path
     if os.path.exists(append_path_outside):
-        pmb.chroot.root(args, ["rm", append_path])
+        pmb.chroot.root(args, ["rm", append_path], suffix)
 
     # Add src path to pkgdesc, cut it off after max length
     pkgdesc = ("[" + src + "] " + apkbuild["pkgdesc"])[:127]
@@ -299,14 +298,14 @@ def override_source(args, apkbuild, pkgver, src, suffix="native"):
     with open(append_path_outside, "w", encoding="utf-8") as handle:
         for line in append.split("\n"):
             handle.write(line[13:].replace(" " * 4, "\t") + "\n")
-    pmb.chroot.user(args, ["cat", append_path])
+    pmb.chroot.user(args, ["cat", append_path], suffix)
 
     # Append it to the APKBUILD
     apkbuild_path = "/home/pmos/build/APKBUILD"
     shell_cmd = ("cat " + apkbuild_path + " " + append_path + " > " +
                  append_path + "_")
-    pmb.chroot.user(args, ["sh", "-c", shlex.quote(shell_cmd)])
-    pmb.chroot.user(args, ["mv", append_path + "_", apkbuild_path])
+    pmb.chroot.user(args, ["sh", "-c", shell_cmd], suffix)
+    pmb.chroot.user(args, ["mv", append_path + "_", apkbuild_path], suffix)
 
 
 def run_abuild(args, apkbuild, arch, strict=False, force=False, cross=None,
@@ -352,10 +351,7 @@ def run_abuild(args, apkbuild, arch, strict=False, force=False, cross=None,
         env["DISTCC_HOSTS"] = "127.0.0.1:" + args.port_distccd
 
     # Build the abuild command
-    cmd = []
-    for key, value in env.items():
-        cmd += [key + "=" + shlex.quote(value)]
-    cmd += ["abuild"]
+    cmd = ["abuild"]
     if strict:
         cmd += ["-r"]  # install depends with abuild
     else:
@@ -366,7 +362,7 @@ def run_abuild(args, apkbuild, arch, strict=False, force=False, cross=None,
     # Copy the aport to the chroot and build it
     pmb.build.copy_to_buildpath(args, apkbuild["pkgname"], suffix)
     override_source(args, apkbuild, pkgver, src, suffix)
-    pmb.chroot.user(args, cmd, suffix, "/home/pmos/build")
+    pmb.chroot.user(args, cmd, suffix, "/home/pmos/build", env=env)
     return (output, cmd, env)
 
 
@@ -388,8 +384,8 @@ def finish(args, apkbuild, arch, output, strict=False, suffix="native"):
     # Uninstall build dependencies (strict mode)
     if strict:
         logging.info("(" + suffix + ") uninstall build dependencies")
-        cmd = ["SUDO_APK='abuild-apk --no-progress'", "abuild", "undeps"]
-        pmb.chroot.user(args, cmd, suffix, "/home/pmos/build")
+        pmb.chroot.user(args, ["abuild", "undeps"], suffix, "/home/pmos/build",
+                        env={"SUDO_APK": "abuild-apk --no-progress"})
 
 
 def package(args, pkgname, arch=None, force=False, strict=False,

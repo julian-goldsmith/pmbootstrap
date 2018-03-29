@@ -181,6 +181,9 @@ def test_is_necessary_warn_depends(args, monkeypatch):
 
 
 def test_init_buildenv(args, monkeypatch):
+    # First init native chroot buildenv properly without patched functions
+    pmb.build.init(args)
+
     # Disable effects of functions we don't want to test here
     monkeypatch.setattr(pmb.build._package, "build_depends",
                         return_fake_build_depends)
@@ -227,12 +230,11 @@ def test_run_abuild(args, monkeypatch):
     # Normal run
     output = "armhf/test-1-r2.apk"
     env = {"CARCH": "armhf", "SUDO_APK": "abuild-apk --no-progress"}
-    sudo_apk = "SUDO_APK='abuild-apk --no-progress'"
-    cmd = ["CARCH=armhf", sudo_apk, "abuild", "-d"]
+    cmd = ["abuild", "-d"]
     assert func(args, apkbuild, "armhf") == (output, cmd, env)
 
     # Force and strict
-    cmd = ["CARCH=armhf", sudo_apk, "abuild", "-r", "-f"]
+    cmd = ["abuild", "-r", "-f"]
     assert func(args, apkbuild, "armhf", True, True) == (output, cmd, env)
 
     # cross=native
@@ -240,8 +242,7 @@ def test_run_abuild(args, monkeypatch):
            "SUDO_APK": "abuild-apk --no-progress",
            "CROSS_COMPILE": "armv6-alpine-linux-muslgnueabihf-",
            "CC": "armv6-alpine-linux-muslgnueabihf-gcc"}
-    cmd = ["CARCH=armhf", sudo_apk, "CROSS_COMPILE=armv6-alpine-linux-muslgnueabihf-",
-           "CC=armv6-alpine-linux-muslgnueabihf-gcc", "abuild", "-d"]
+    cmd = ["abuild", "-d"]
     assert func(args, apkbuild, "armhf", cross="native") == (output, cmd, env)
 
     # cross=distcc
@@ -363,23 +364,24 @@ def test_build_local_source_high_level(args, tmpdir):
     pmb.helpers.run.root(args, ["chown", "root:root", unreadable])
     pmb.helpers.run.root(args, ["chmod", "500", unreadable])
 
-    # Delete all hello-world --src packages
-    pattern = (args.work + "/packages/" + args.arch_native +
-               "/hello-world-*_p*.apk")
-    for path in glob.glob(pattern):
-        pmb.helpers.run.root(args, ["rm", path])
-    assert len(glob.glob(pattern)) == 0
+    # Test native arch and foreign arch chroot
+    for arch in [args.arch_native, "armhf"]:
+        # Delete all hello-world --src packages
+        pattern = args.work + "/packages/" + arch + "/hello-world-*_p*.apk"
+        for path in glob.glob(pattern):
+            pmb.helpers.run.root(args, ["rm", path])
+        assert len(glob.glob(pattern)) == 0
 
-    # Build hello-world --src package
-    pmb.helpers.run.user(args, [pmb.config.pmb_src + "/pmbootstrap.py",
-                                "--aports", aports, "build", "--src", src,
-                                "hello-world"])
+        # Build hello-world --src package
+        pmb.helpers.run.user(args, [pmb.config.pmb_src + "/pmbootstrap.py",
+                                    "--aports", aports, "build", "--src", src,
+                                    "hello-world", "--arch", arch])
 
-    # Verify that the package has been built
-    paths = glob.glob(pattern)
-    assert len(paths) == 1
+        # Verify that the package has been built and delete it
+        paths = glob.glob(pattern)
+        assert len(paths) == 1
+        pmb.helpers.run.root(args, ["rm", paths[0]])
 
-    # Clean up: delete package and tempfolder, update index
-    pmb.helpers.run.root(args, ["rm", paths[0]])
+    # Clean up: update index, delete temp folder
     pmb.build.index_repo(args, args.arch_native)
     pmb.helpers.run.root(args, ["rm", "-r", tmpdir])
