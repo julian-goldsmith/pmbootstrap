@@ -42,8 +42,8 @@ weston() {
 }
 
 nonfree_firmware() {
-	pkgdesc="Wifi firmware"
-	depends="linux-firmware"
+	pkgdesc="Wifi/GPU firmware"
+	depends="linux-firmware firmware-adreno"
 	mkdir "$subpkgdir"
 }
 
