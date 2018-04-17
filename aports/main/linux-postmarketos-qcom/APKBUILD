@@ -13,8 +13,9 @@ depends=""
 makedepends="perl sed installkernel bash gmp-dev bc linux-headers elfutils-dev libressl-dev file bison flex"
 options="!strip !check !tracedeps"
 install=
+_commit="459e3e6e05ab68f112531209958f4a309de1b1a3"
 source="
-	linux-qcom.tar.gz::https://github.com/bhush9/linux/archive/459e3e6e05ab68f112531209958f4a309de1b1a3.tar.gz
+	linux-${_commit}.tar.gz::https://github.com/bhush9/linux/archive/${_commit}.tar.gz
 	config-${_flavor}.armhf
 "
 
@@ -33,7 +34,7 @@ esac
 HOSTCC="${CC:-gcc}"
 HOSTCC="${HOSTCC#${CROSS_COMPILE}}"
 
-builddir="$srcdir/linux-459e3e6e05ab68f112531209958f4a309de1b1a3"
+builddir="$srcdir/linux-${_commit}"
 
 prepare() {
 	local _patch_failed=
@@ -177,5 +178,5 @@ dev() {
 		done
 	fi
 }
-sha512sums="c17cfe33f16f4b175957d98b6860744e20afc1aedb796eb62e2d2dbc893e320f296e6191d97fbfb4db8dee9113780d95150a89defae4e33e43b8b2e4070f2d96  linux-qcom.tar.gz
+sha512sums="c17cfe33f16f4b175957d98b6860744e20afc1aedb796eb62e2d2dbc893e320f296e6191d97fbfb4db8dee9113780d95150a89defae4e33e43b8b2e4070f2d96  linux-459e3e6e05ab68f112531209958f4a309de1b1a3.tar.gz
 91b90e07608acb02b611263ee5318a8e1c61ca0605023f0ded1a1f403e6e3ee172be5c96734d6d5eddaf5b38762e449b7ab7d5471db5b763c0e1bbb350342b1f  config-postmarketos-qcom.armhf"
