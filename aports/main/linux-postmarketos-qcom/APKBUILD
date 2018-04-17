@@ -7,7 +7,7 @@ pkgver=4.16_rc6
 pkgrel=0
 
 arch="armhf"
-pkgdesc="Linux for pmOS supported chipsets (qcom, with extra patches from different devs + linux-next)"
+pkgdesc="Kernel close to mainline with extra patches for Qualcomm devices"
 url="https://kernel.org/"
 depends=""
 makedepends="perl sed installkernel bash gmp-dev bc linux-headers elfutils-dev libressl-dev file bison flex"
