@@ -1,4 +1,5 @@
-# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+# Copied from Alpine to increase $pkgver to 2.4.91
+# TODO: remove when alpine upgrades to libdrm to 2.4.90+
 pkgname=libdrm
 pkgver=2.4.91
 pkgrel=1
