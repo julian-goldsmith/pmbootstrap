@@ -22,7 +22,7 @@ case $pkgver in
 	*.*.*) _kernver=${pkgver%.*};;
 	*.*) _kernver=$pkgver;;
 esac
-pkgrel=8
+pkgrel=9
 arch="armhf"
 pkgdesc="LineageOS 14.1 kernel for OnePlus One (bacon)"
 url="https://github.com/LineageOS/android_kernel_oneplus_msm8974"
@@ -127,6 +127,6 @@ package() {
 		INSTALL_MOD_PATH="$pkgdir" INSTALL_MOD_STRIP=1 modules_install
 }
 
-sha512sums="96d443d39a2101503a24cd6d3b467404f3b22ebdada582772ac542c119df15a3090469dedbbf3ea2323076e5170a17ecf9e0b273b72eed5ae89f9d6aa71f39dc  linux-bacon-v4.15-rc6.tar.gz
-2df8a4b01dcb444a652ff2fda544400192a92ff994c66d2d7c3d737f94807d0c179e415240a216eab6e6e0b3490ddd34adef683d169ed112f0fec2b314d4df93  config-oneplus-bacon.armhf
+sha512sums="98c2b91c370bcf63e1f0aa8b2a82c058261eac58c514d06a365a15cb89873ab9496fdb9d3c135aecd82957dbd829611c8c90475b47c68226e67aa1479c7f7338  linux-bacon-v4.15-rc6.tar.gz
+35a518be5123e40e6a95af21dcdd2f12dcaee719ca2ee44c862b6b20067f13f40c0e28ac8627704fbf0dcdc0ef84a5106425733e08cb94bed9125cdfcacae2c3  config-oneplus-bacon.armhf
 d80980e9474c82ba0ef1a6903b434d8bd1b092c40367ba543e72d2c119301c8b2d05265740e4104ca1ac5d15f6c4aa49e8776cb44264a9a28dc551e0d1850dcc  compiler-gcc6.h"
