@@ -42,12 +42,13 @@ apk_tools_static_min_version = "2.9.0-r0"
 # Version of the work folder (as asked during 'pmbootstrap init'). Increase
 # this number, whenever migration is required and provide the migration code,
 # see migrate_work_folder()).
-work_version = "1"
+work_version = 2
 
 # Only save keys to the config file, which we ask for in 'pmbootstrap init'.
 config_keys = ["ccache_size", "device", "extra_packages", "hostname", "jobs",
-               "keymap", "nonfree_firmware", "nonfree_userland",
-               "qemu_native_mesa_driver", "timezone", "ui", "user", "work"]
+               "kernel", "keymap", "nonfree_firmware", "nonfree_userland",
+               "qemu_native_mesa_driver", "ssh_keys", "timezone", "ui", "user",
+               "work"]
 
 # Config file/commandline default values
 # $WORK gets replaced with the actual value for args.work (which may be
@@ -68,6 +69,7 @@ defaults = {
     # target device: <https://github.com/postmarketOS/pmbootstrap/issues/429>
     "iter_time": "200",
     "jobs": str(multiprocessing.cpu_count() + 1),
+    "kernel": "stable",
     "keymap": "",
     "log": "$WORK/log.txt",
     "mirror_alpine": "http://dl-cdn.alpinelinux.org/alpine/",
@@ -76,6 +78,7 @@ defaults = {
     "nonfree_userland": False,
     "port_distccd": "33632",
     "qemu_native_mesa_driver": "dri-virtio",
+    "ssh_keys": False,
     "timezone": "GMT",
     "ui": "weston",
     "user": "user",
@@ -318,7 +321,7 @@ flashers = {
                 {
                     "list_devices": [["fastboot", "-i", "$VENDOR_ID",
                                       "devices", "-l"]],
-                    "flash_system": [["fastboot", "-i", "$VENDOR_ID",
+                    "flash_rootfs": [["fastboot", "-i", "$VENDOR_ID",
                                       "flash", "$PARTITION_SYSTEM", "$IMAGE"]],
                     "flash_kernel": [["fastboot", "-i", "$VENDOR_ID",
                                       "flash", "boot", "$BOOT/boot.img-$FLAVOR"]],
@@ -337,7 +340,7 @@ flashers = {
         "actions":
         {
             "list_devices": [["heimdall", "detect"]],
-            "flash_system": [
+            "flash_rootfs": [
                 ["heimdall_wait_for_device.sh"],
                 ["heimdall", "flash", "--$PARTITION_SYSTEM", "$IMAGE"]],
             "flash_kernel": [["heimdall_flash_kernel.sh",
@@ -352,7 +355,7 @@ flashers = {
         "actions":
         {
             "list_devices": [["heimdall", "detect"]],
-            "flash_system": [
+            "flash_rootfs": [
                 ["heimdall_wait_for_device.sh"],
                 ["heimdall", "flash", "--$PARTITION_SYSTEM", "$IMAGE"]],
             "flash_kernel": [

@@ -92,6 +92,30 @@ def get_nonfree_packages(args, device):
     return ret
 
 
+def get_kernel_package(args, device):
+    """
+    Get the kernel package based on user's choice in "pmbootstrap init".
+
+    :param device: code name, e.g. "lg-mako"
+    :returns: [] or the package in a list, e.g. ["linux-postmarketos-stable"]
+    """
+    # Get kernels for the device
+    kernels = pmb.parse._apkbuild.kernels(args, device)
+    if not kernels or args.kernel == "none":
+        return []
+
+    # Sanity check
+    if args.kernel not in kernels:
+        raise RuntimeError("Selected kernel (" + args.kernel + ") is not"
+                           " configured for device " + device + ". Please"
+                           " run 'pmbootstrap init' to select a valid kernel.")
+
+    # Return the pkgname
+    if args.kernel == "downstream":
+        return ["linux-" + device]
+    return ["linux-postmarketos-" + args.kernel]
+
+
 def copy_files_from_chroot(args):
     """
     Copy all files from the rootfs chroot to /mnt/install, except
@@ -184,19 +208,16 @@ def setup_login(args):
     pmb.chroot.root(args, ["passwd", "-l", "root"], suffix)
 
 
-def copy_ssh_key(args):
+def copy_ssh_keys(args):
     """
-    Offer to copy user's SSH public keys to the device if they exist
+    If requested, copy user's SSH public keys to the device if they exist
     """
+    if not args.ssh_keys:
+        return
     keys = []
-    for key in ["RSA", "Ed25519"]:
-        user_ssh_pubkey = os.path.expanduser("~/.ssh/id_" + key.lower() + ".pub")
-        if not os.path.exists(user_ssh_pubkey):
-            continue
-        if pmb.helpers.cli.confirm(
-                args, "Would you like to copy your " + key + " SSH public key to the device?"):
-            with open(user_ssh_pubkey, "r") as infile:
-                keys += infile.readlines()
+    for key in glob.glob(os.path.expanduser("~/.ssh/id_*.pub")):
+        with open(key, "r") as infile:
+            keys += infile.readlines()
 
     if not len(keys):
         logging.info("NOTE: Public SSH keys not found. Since no SSH keys " +
@@ -283,9 +304,7 @@ def install_system_image(args):
     copy_files_from_chroot(args)
     create_home_from_skel(args)
     configure_apk(args)
-
-    # If user has a ssh pubkey, offer to copy it to device
-    copy_ssh_key(args)
+    copy_ssh_keys(args)
     pmb.chroot.shutdown(args, True)
 
     # Convert system image to sparse using img2simg
@@ -303,6 +322,17 @@ def install_system_image(args):
     logging.info("*** (5/5) FLASHING TO DEVICE ***")
     logging.info("Run the following to flash your installation to the"
                  " target device:")
+
+    # System flash information
+    if not args.sdcard:
+        logging.info("* pmbootstrap flasher flash_rootfs")
+        logging.info("  Flashes the generated rootfs image to your device:")
+        logging.info("  " + args.work + "/chroot_native/home/pmos/rootfs/" +
+                     args.device + ".img")
+        logging.info("  (NOTE: This file has a partition table, which contains"
+                     " /boot and / subpartitions. That way we don't need to"
+                     " change the partition layout on your device.)")
+
     logging.info("* pmbootstrap flasher flash_kernel")
     logging.info("  Flashes the kernel + initramfs to your device:")
     logging.info("  " + args.work + "/chroot_rootfs_" + args.device +
@@ -313,16 +343,6 @@ def install_system_image(args):
         logging.info("  (NOTE: " + method + " also supports booting"
                      " the kernel/initramfs directly without flashing."
                      " Use 'pmbootstrap flasher boot' to do that.)")
-
-    # System flash information
-    if not args.sdcard:
-        logging.info("* pmbootstrap flasher flash_system")
-        logging.info("  Flashes the system image, that has been"
-                     " generated to your device:")
-        logging.info("  " + args.work + "/chroot_native/home/pmos/rootfs/" +
-                     args.device + ".img")
-        logging.info("  (NOTE: This file has a partition table,"
-                     " which contains a boot- and root subpartition.)")
 
     # Export information
     logging.info("* If the above steps do not work, you can also create"
@@ -364,6 +384,7 @@ def install(args):
                  args.device))
     install_packages = (pmb.config.install_device_packages +
                         ["device-" + args.device] +
+                        get_kernel_package(args, args.device) +
                         get_nonfree_packages(args, args.device))
     if args.ui.lower() != "none":
         install_packages += ["postmarketos-ui-" + args.ui]

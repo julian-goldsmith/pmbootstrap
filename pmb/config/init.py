@@ -57,7 +57,7 @@ def ask_for_work_path(args):
             if not os.path.exists(ret):
                 os.makedirs(ret, 0o700, True)
                 with open(ret + "/version", "w") as handle:
-                    handle.write(pmb.config.work_version + "\n")
+                    handle.write(str(pmb.config.work_version) + "\n")
 
             # Make sure, that we can write into it
             os.makedirs(ret + "/cache_http", 0o700, True)
@@ -122,6 +122,47 @@ def ask_for_timezone(args):
     logging.info("WARNING: Unable to determine timezone configuration on host,"
                  " using GMT.")
     return "GMT"
+
+
+def ask_for_device_kernel(args, device):
+    """
+    Ask for the kernel that should be used with the device.
+
+    :param device: code name, e.g. "lg-mako"
+    :returns: None if the kernel is hardcoded in depends without subpackages
+    :returns: kernel type ("downstream", "stable", "mainline", ...)
+    """
+    # Get kernels
+    kernels = pmb.parse._apkbuild.kernels(args, device)
+    if not kernels:
+        return args.kernel
+
+    # Get default
+    default = args.kernel
+    if default not in kernels:
+        default = list(kernels.keys())[0]
+
+    # Ask for kernel (extra message when downstream and upstream are available)
+    logging.info("Which kernel do you want to use with your device?")
+    if "downstream" in kernels:
+        logging.info("Downstream kernels are typically the outdated Android"
+                     " kernel forks.")
+    if "downstream" in kernels and len(kernels) > 1:
+        logging.info("Upstream kernels (mainline, stable, ...) get security"
+                     " updates, but may have less working features than"
+                     " downstream kernels.")
+
+    # List kernels
+    logging.info("Available kernels (" + str(len(kernels)) + "):")
+    for type in sorted(kernels.keys()):
+        logging.info("* " + type + ": " + kernels[type])
+    while True:
+        ret = pmb.helpers.cli.ask(args, "Kernel", None, default, True)
+        if ret in kernels.keys():
+            return ret
+        logging.fatal("ERROR: Invalid kernel specified, please type in one"
+                      " from the list above.")
+    return ret
 
 
 def ask_for_device_nonfree(args, device):
@@ -190,8 +231,9 @@ def ask_for_device(args):
             pmb.aportgen.generate(args, "linux-" + device)
         break
 
+    kernel = ask_for_device_kernel(args, device)
     nonfree = ask_for_device_nonfree(args, device)
-    return (device, device_exists, nonfree)
+    return (device, device_exists, kernel, nonfree)
 
 
 def ask_for_qemu_native_mesa_driver(args, device, arch_native):
@@ -252,6 +294,14 @@ def ask_for_hostname(args, device):
         return ret
 
 
+def ask_for_ssh_keys(args):
+    if not len(glob.glob(os.path.expanduser("~/.ssh/id_*.pub"))):
+        return False
+    return pmb.helpers.cli.confirm(args,
+                                   "Would you like to copy your SSH public keys to the device?",
+                                   default=args.ssh_keys)
+
+
 def frontend(args):
     cfg = pmb.config.load(args)
 
@@ -259,8 +309,9 @@ def frontend(args):
     cfg["pmbootstrap"]["work"] = args.work = ask_for_work_path(args)
 
     # Device
-    device, device_exists, nonfree = ask_for_device(args)
+    device, device_exists, kernel, nonfree = ask_for_device(args)
     cfg["pmbootstrap"]["device"] = device
+    cfg["pmbootstrap"]["kernel"] = kernel
     cfg["pmbootstrap"]["nonfree_firmware"] = str(nonfree["firmware"])
     cfg["pmbootstrap"]["nonfree_userland"] = str(nonfree["userland"])
 
@@ -295,6 +346,9 @@ def frontend(args):
 
     # Hostname
     cfg["pmbootstrap"]["hostname"] = ask_for_hostname(args, device)
+
+    # SSH keys
+    cfg["pmbootstrap"]["ssh_keys"] = str(ask_for_ssh_keys(args))
 
     # Save config
     pmb.config.save(args, cfg)
