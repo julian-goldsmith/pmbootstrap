@@ -3,14 +3,14 @@ _config="config-${_flavor}.${CARCH}"
 
 pkgname=linux-${_flavor}
 
-pkgver=4.16_rc6
-pkgrel=0
+pkgver=4.17_rc3
+pkgrel=1
 
 arch="armhf"
 pkgdesc="Kernel close to mainline with extra patches for Qualcomm devices"
 url="https://kernel.org/"
 depends=""
-makedepends="perl sed installkernel bash gmp-dev bc linux-headers elfutils-dev libressl-dev file bison flex"
+makedepends="dtbtool perl sed installkernel bash gmp-dev bc linux-headers elfutils-dev libressl-dev file bison flex"
 options="!strip !check !tracedeps"
 install=
 _commit="459e3e6e05ab68f112531209958f4a309de1b1a3"
@@ -34,7 +34,7 @@ esac
 HOSTCC="${CC:-gcc}"
 HOSTCC="${HOSTCC#${CROSS_COMPILE}}"
 
-builddir="$srcdir/linux-${_commit}"
+builddir="$srcdir/linux-postmarketos-${_commit}"
 
 prepare() {
 	local _patch_failed=
@@ -81,6 +81,8 @@ build() {
 	make ARCH="$_carch" CC="${CC:-gcc}" \
 		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-${_flavor}" \
 		CFLAGS_MODULE=-fno-pic
+
+	dtbTool -s 2048 -p scripts/dtc/ -o arch/arm/boot/dt.img arch/arm/boot/dts --version=2
 }
 
 package() {
@@ -96,6 +98,9 @@ package() {
 
 	install -D "$srcdir/build/include/config/kernel.release" \
 		"$pkgdir/usr/share/kernel/$_flavor/kernel.release"
+
+	install -Dm644 "$srcdir/build/arch/arm/boot/dt.img" \
+		"$pkgdir/boot/dt.img"
 
 	cd "$srcdir"/build
 
@@ -179,4 +184,4 @@ dev() {
 	fi
 }
 sha512sums="c17cfe33f16f4b175957d98b6860744e20afc1aedb796eb62e2d2dbc893e320f296e6191d97fbfb4db8dee9113780d95150a89defae4e33e43b8b2e4070f2d96  linux-459e3e6e05ab68f112531209958f4a309de1b1a3.tar.gz
-91b90e07608acb02b611263ee5318a8e1c61ca0605023f0ded1a1f403e6e3ee172be5c96734d6d5eddaf5b38762e449b7ab7d5471db5b763c0e1bbb350342b1f  config-postmarketos-qcom.armhf"
+7a57f8599be1cb99b4107e02747e21959cd6ba2bb81e5c0ce7554d642b7242bfd696674c13016a22383b80ccb8b96e00556d89cdab2341e2ae4734e5db4f15b8  config-postmarketos-qcom.armhf"
