@@ -34,7 +34,7 @@ esac
 HOSTCC="${CC:-gcc}"
 HOSTCC="${HOSTCC#${CROSS_COMPILE}}"
 
-builddir="$srcdir/linux-postmarketos-${_commit}"
+builddir="$srcdir/linux-${_commit}"
 
 prepare() {
 	local _patch_failed=
@@ -81,8 +81,6 @@ build() {
 	make ARCH="$_carch" CC="${CC:-gcc}" \
 		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-${_flavor}" \
 		CFLAGS_MODULE=-fno-pic
-
-	dtbTool -s 2048 -p scripts/dtc/ -o arch/arm/boot/dt.img arch/arm/boot/dts --version=2
 }
 
 package() {
@@ -98,9 +96,6 @@ package() {
 
 	install -D "$srcdir/build/include/config/kernel.release" \
 		"$pkgdir/usr/share/kernel/$_flavor/kernel.release"
-
-	install -Dm644 "$srcdir/build/arch/arm/boot/dt.img" \
-		"$pkgdir/boot/dt.img"
 
 	cd "$srcdir"/build
 

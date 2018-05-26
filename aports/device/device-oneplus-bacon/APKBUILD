@@ -1,12 +1,11 @@
 pkgname=device-oneplus-bacon
 pkgver=1
-pkgrel=12
+pkgrel=14
 pkgdesc="OnePlus One"
 url="https://github.com/postmarketOS"
 arch="noarch"
 license="MIT"
-#depends="postmarketos-base linux-oneplus-bacon linux-firmware mkbootimg mesa-dri-freedreno xorg-server-dbg xf86-input-libinput"
-depends="postmarketos-base linux-oneplus-bacon linux-firmware mkbootimg mesa-dri-freedreno xorg-server-dbg xf86-input-libinput xf86-video-freedreno firmware-adreno"
+depends="postmarketos-base linux-postmarketos-qcom linux-firmware mkbootimg mesa-dri-freedreno xorg-server-dbg xf86-input-libinput firmware-adreno"
 makedepends=""
 install=""
 subpackages="$pkgname-weston"
@@ -26,6 +25,6 @@ weston() {
 		"$subpkgdir"/etc/xdg/weston/weston.ini
 }
 
-sha512sums="2ef3d2ccb246eb2a99eba9d064815dcbab1f0761aa71dbddbb5aef5a0fc38a7bfdcc3ebe239c98da280d46b99baeb292a0d3da39d3aeb02df895ddba7f575375  deviceinfo
+sha512sums="da824ea18c0d8dbefca3100b3e00f9632401df8c00a7bce3382cf1190fd29cf0daf5aa19d33f9ea53963731d5a8eff3993418bb377c56860c060de2242e3d9b0  deviceinfo
 65e9ee7352b1dc39d99ea411eb0ed9c56f9975230907db5add3a1b4146cdf6f227c934052dab38a1937ed67d67585f28fb7410f10a1bec9dd5e4eb69d7253515  90-android-touch-dev.rules
 86a0c08720225e4532f797ad69307dfff66867e4a35de1aacceefc48f19721caf93f9a17a268e58f1f5a7e947f157d6984676837c2b5b835b0caf6ee9821bb5a  weston.ini"
