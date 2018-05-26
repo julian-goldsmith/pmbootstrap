@@ -1,13 +1,13 @@
 pkgname=device-lg-hammerhead
-pkgver=1
-pkgrel=25
+pkgver=2
+pkgrel=0
 pkgdesc="Google Nexus 5"
 url="https://github.com/postmarketOS"
 arch="noarch"
 license="MIT"
-depends="postmarketos-base linux-postmarketos-qcom mkbootimg mesa-dri-freedreno"
+depends="postmarketos-base linux-postmarketos-qcom mkbootimg mesa-dri-freedreno ofono"
 makedepends=""
-install=""
+install="$pkgname.post-install"
 subpackages="$pkgname-weston $pkgname-x11 $pkgname-nonfree-firmware:nonfree_firmware"
 source="
 	deviceinfo
@@ -44,8 +44,8 @@ weston() {
 }
 
 nonfree_firmware() {
-	pkgdesc="Wifi/GPU firmware"
-	depends="linux-firmware-qcom linux-firmware-brcm firmware-adreno"
+	pkgdesc="Wifi, GPU, Modem and ADSP firmware"
+	depends="linux-firmware-qcom linux-firmware-brcm firmware-adreno firmware-lg-hammerhead-adsp firmware-lg-hammerhead-modem modem-qcom-msm-mainline-common"
 	mkdir "$subpkgdir"
 }
 
